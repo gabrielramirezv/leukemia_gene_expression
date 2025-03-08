@@ -3,7 +3,7 @@ NAME
     data_download
 
 VERSION
-    1.0
+    1.1
 
 
 AUTHOR
@@ -16,7 +16,7 @@ CATEGORY
     Data download
 
 USAGE
-    python src/data_download.py
+    python data_download.py
 
 ARGUMENTS
     None
@@ -32,8 +32,9 @@ from Bio import Entrez
 Entrez.email = "gramirez@lcg.unam.mx"
 
 # Extraer una entrada de GenBank desde la base de datos SRA
+sra_id = "SRR8615998"
 with Entrez.efetch(db="sra", 
-                   id="SRR8615998",
+                   id=sra_id,
                    rettype="xml", 
                    retmode="text") as handle:
     data = handle.read()  # Leer los datos
@@ -43,5 +44,5 @@ if isinstance(data, bytes):
     data = data.decode("utf-8")  # Convertir de bytes a string
 
 # Guardar los datos en un archivo
-with open("SRR8615998.xml", "w", encoding="utf-8") as output:
+with open(f"../results/{sra_id}.xml", "w", encoding="utf-8") as output:
     output.write(data)
