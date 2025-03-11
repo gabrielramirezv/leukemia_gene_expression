@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Directorio de trabajo
+WORKDIR=$(pwd)
+
 # Descargar las secuencias de RNA-Seq del repositorio SRA en segundo plano
 nohup prefetch SRR8615998 &
 
