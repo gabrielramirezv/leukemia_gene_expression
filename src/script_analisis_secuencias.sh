@@ -99,3 +99,10 @@ while read -r SAMPLE; do
     fi
 
 done < samples.txt
+
+# Limpieza para optimizar la memoria
+rm -r SRR*/
+rm fastq/*
+rm -r  fastqc_reports/SRR*
+rm fastqc_reports/*
+rm -r kallisto/SRR*
