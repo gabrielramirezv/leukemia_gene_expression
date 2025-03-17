@@ -14,22 +14,25 @@ fi
 
 # Procesar cada muestra listada en samples.txt
 while read -r SAMPLE; do
+    # Ignorar líneas vacías
+    [[ -z "$SAMPLE" ]] && continue
+
     echo "Procesando muestra: $SAMPLE"
-    
+
     # Eliminar archivos de bloqueo si existen
     rm -f "$SAMPLE/$SAMPLE.sra.lock"
-    
+
     # Descargar datos
     prefetch "$SAMPLE"
     if [ ! -f "$SAMPLE/$SAMPLE.sra" ]; then
-        echo "Error: No se pudo descargar $SAMPLE"
+        echo "Error: No se pudo descargar $SAMPLE. Verifique la conexión o el ID de muestra."
         continue
     fi
-    
+
     # Convertir a formato FASTQ
     fastq-dump --split-files --skip-technical "$SAMPLE/$SAMPLE.sra" -O fastq/
-    if [ ! -f "fastq/${SAMPLE}_1.fastq" ] || [ ! -f "fastq/${SAMPLE}_2.fastq" ]; then
-        echo "Error: No se generaron archivos FASTQ para $SAMPLE"
+    if [ ! -s "fastq/${SAMPLE}_1.fastq" ] || [ ! -s "fastq/${SAMPLE}_2.fastq" ]; then
+        echo "Error: Archivos FASTQ vacíos o no generados para $SAMPLE"
         continue
     fi
 
@@ -77,19 +80,22 @@ cd "$WORKDIR"
 
 # Ejecutar Kallisto para cada muestra listada en samples.txt
 while read -r SAMPLE; do
+    # Ignorar líneas vacías
+    [[ -z "$SAMPLE" ]] && continue
+
     echo "Cuantificando muestra: $SAMPLE"
-    if [ ! -f "fastq/${SAMPLE}_1_trimmed.fastq" ] || [ ! -f "fastq/${SAMPLE}_2_trimmed.fastq" ]; then
+    if [ ! -s "fastq/${SAMPLE}_1.fastq" ] || [ ! -s "fastq/${SAMPLE}_2.fastq" ]; then
         echo "Error: No hay archivos FASTQ válidos para $SAMPLE, saltando Kallisto"
         continue
     fi
     kallisto quant -i kallisto/Homo_sapiens.GRCh38.cdna.all.idx -o "kallisto/${SAMPLE}" \
-        fastq/${SAMPLE}_1_trimmed.fastq fastq/${SAMPLE}_2_trimmed.fastq
-    
-    # Renombrar y mover resultado
-    mv kallisto/${SAMPLE}/abundance.tsv results/abundance_${SAMPLE}.tsv
+        fastq/${SAMPLE}_1.fastq fastq/${SAMPLE}_2.fastq
+
+    # Verificar si el archivo de abundancia fue generado antes de moverlo
+    if [ -f "kallisto/${SAMPLE}/abundance.tsv" ]; then
+        mv kallisto/${SAMPLE}/abundance.tsv results/abundance_${SAMPLE}.tsv
+    else
+        echo "Error: No se encontró el archivo de abundancia para $SAMPLE"
+    fi
 
 done < samples.txt
-
-# Limpieza opcional
-rm -r SRR*
-rm -r kallisto
