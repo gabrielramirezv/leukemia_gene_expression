@@ -12,6 +12,18 @@ if [ ! -f samples.txt ]; then
     exit 1
 fi
 
+# Descargar el transcriptoma de referencia si no existe
+cd kallisto
+if [ ! -f Homo_sapiens.GRCh38.cdna.all.fa.gz ]; then
+    wget https://ftp.ensembl.org/pub/release-108/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz
+fi
+
+# Crear el índice de Kallisto si no existe
+if [ ! -f Homo_sapiens.GRCh38.cdna.all.idx ]; then
+    kallisto index -i Homo_sapiens.GRCh38.cdna.all.idx Homo_sapiens.GRCh38.cdna.all.fa.gz
+fi
+cd "$WORKDIR"
+
 # Procesar cada muestra listada en samples.txt
 while read -r SAMPLE; do
     # Ignorar líneas vacías
@@ -64,25 +76,7 @@ while read -r SAMPLE; do
             ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36
     fi
 
-done < samples.txt
-
-# Descargar el transcriptoma de referencia si no existe
-cd kallisto
-if [ ! -f Homo_sapiens.GRCh38.cdna.all.fa.gz ]; then
-    wget https://ftp.ensembl.org/pub/release-108/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz
-fi
-
-# Crear el índice de Kallisto si no existe
-if [ ! -f Homo_sapiens.GRCh38.cdna.all.idx ]; then
-    kallisto index -i Homo_sapiens.GRCh38.cdna.all.idx Homo_sapiens.GRCh38.cdna.all.fa.gz
-fi
-cd "$WORKDIR"
-
-# Ejecutar Kallisto para cada muestra listada en samples.txt
-while read -r SAMPLE; do
-    # Ignorar líneas vacías
-    [[ -z "$SAMPLE" ]] && continue
-
+    # Ejecutar Kallisto
     echo "Cuantificando muestra: $SAMPLE"
     if [ ! -s "fastq/${SAMPLE}_1.fastq" ] || [ ! -s "fastq/${SAMPLE}_2.fastq" ]; then
         echo "Error: No hay archivos FASTQ válidos para $SAMPLE, saltando Kallisto"
@@ -98,11 +92,11 @@ while read -r SAMPLE; do
         echo "Error: No se encontró el archivo de abundancia para $SAMPLE"
     fi
 
-done < samples.txt
+    # Limpieza
+    rm -r "$SAMPLE"/
+    rm fastq/${SAMPLE}_*
+    rm -r fastqc_reports/${SAMPLE}_fastqc/
+    rm fastqc_reports/${SAMPLE}_*_fastqc.zip
+    rm -r kallisto/${SAMPLE}
 
-# Limpieza para optimizar la memoria
-rm -r SRR*/
-rm fastq/*
-rm -r  fastqc_reports/SRR*
-rm fastqc_reports/*
-rm -r kallisto/SRR*
+done < samples.txt
