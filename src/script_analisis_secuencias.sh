@@ -95,8 +95,8 @@ while read -r SAMPLE; do
     # Limpieza
     rm -r "$SAMPLE"/
     rm fastq/${SAMPLE}_*
-    rm -r fastqc_reports/${SAMPLE}_fastqc/
-    rm fastqc_reports/${SAMPLE}_*_fastqc.zip
+    rm -r fastqc_reports/SRR*_*_fastqc/
+    rm fastqc_reports/*
     rm -r kallisto/${SAMPLE}
 
 done < samples.txt
