@@ -32,17 +32,20 @@ from Bio import Entrez
 Entrez.email = "gramirez@lcg.unam.mx"
 
 # Extraer una entrada de GenBank desde la base de datos SRA
-sra_id = "SRR8615998"
-with Entrez.efetch(db="sra", 
-                   id=sra_id,
-                   rettype="xml", 
-                   retmode="text") as handle:
-    data = handle.read()  # Leer los datos
+with open("../data/SRR_list.txt", "r") as file:
+    sra_ids = file.read().splitlines()  # Leer el archivo y separar por líneas
 
-# Decodificar si es necesario
-if isinstance(data, bytes):  
-    data = data.decode("utf-8")  # Convertir de bytes a string
+for sra_id in sra_ids:
+    with Entrez.efetch(db="sra", 
+                    id=sra_id,
+                    rettype="xml", 
+                    retmode="text") as handle:
+        data = handle.read()  # Leer los datos
 
-# Guardar los datos en un archivo
-with open(f"../results/{sra_id}.xml", "w", encoding="utf-8") as output:
-    output.write(data)
+    # Decodificar si es necesario
+    if isinstance(data, bytes):  
+        data = data.decode("utf-8")  # Convertir de bytes a string  
+
+    # Guardar los datos en un archivo
+    with open(f"../results/metadata/{sra_id}.xml", "w", encoding="utf-8") as output:
+        output.write(data)
