@@ -26,7 +26,7 @@ fi
 
 # Crear el índice de Kallisto si no existe
 if [ ! -f Homo_sapiens.GRCh38.cdna.all.idx ]; then
-    conda run -n kallisto kallisto index -i Homo_sapiens.GRCh38.cdna.all.idx Homo_sapiens.GRCh38.cdna.all.fa
+    conda run -n kallisto kallisto index -i Homo_sapiens.GRCh38.cdna.all.idx Homo_sapiens.GRCh38.cdna.all.fa --threads 10
 fi
 cd -  # Volver al directorio de trabajo
 
@@ -96,7 +96,7 @@ process_sample() {
 
     # Ejecutar Kallisto para cuantificar la expresión génica
     echo "Cuantificando muestra: $SAMPLE"
-    conda run -n kallisto kallisto quant -i kallisto/Homo_sapiens.GRCh38.cdna.all.idx --threads 4 -o "kallisto/${SAMPLE}" "$R1" "$R2"
+    conda run -n kallisto kallisto quant -i kallisto/Homo_sapiens.GRCh38.cdna.all.idx --threads 10 -o "kallisto/${SAMPLE}" "$R1" "$R2"
 
     # Verificar si se generó el archivo de abundancia
     if [ -f "kallisto/${SAMPLE}/abundance.tsv" ]; then
@@ -113,8 +113,8 @@ process_sample() {
 
     rm -r "fastqc_reports/${SAMPLE}_1_fastqc"
     rm -r "fastqc_reports/${SAMPLE}_2_fastqc"
-    rm -r "fastqc_reports/${SAMPLE}_1_*"
-    rm -r "fastqc_reports/${SAMPLE}_2_*"
+    rm "fastqc_reports/${SAMPLE}_1_.*"
+    rm "fastqc_reports/${SAMPLE}_2_.*"
 
     rm -r "kallisto/${SAMPLE}"
 
@@ -131,4 +131,4 @@ if [ ! -f samples.txt ]; then
 fi
 
 # Leer el archivo samples.txt y procesar las muestras en paralelo
-cat samples.txt | grep -v '^$' | parallel -j 12  process_sample
+cat samples.txt | grep -v '^$' | parallel -j 20  process_sample
