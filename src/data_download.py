@@ -32,7 +32,7 @@ from Bio import Entrez
 Entrez.email = "gramirez@lcg.unam.mx"
 
 # Extraer una entrada de GenBank desde la base de datos SRA
-with open("../data/SRR_list.txt", "r") as file:
+with open("../data/samples.txt", "r") as file:
     sra_ids = file.read().splitlines()  # Leer el archivo y separar por líneas
 
 for sra_id in sra_ids:
